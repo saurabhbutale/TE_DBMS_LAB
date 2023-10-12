@@ -1,0 +1,29 @@
+ /*CREATE TABLE library(roll_no NUMBER , name VARCHAR2(20), dateofissue DATE , nameofbook VARCHAR2(20), status VARCHAR2(20));
+
+ CREATE TABLE library_audit(roll_no NUMBER , name VARCHAR2(20), dateofissue DATE , nameofbook VARCHAR2(20), status VARCHAR2(20));
+
+ INSERT INTO library VALUES(31,'ASHISH',TO_DATE('10-10-2023','DD-MM-YYYY'),'DBMS','PENDING');
+
+INSERT INTO library VALUES(32,'SAURABH',TO_DATE('02-10-2023','DD-MM-YYYY'),'TOC','PENDING');
+
+ INSERT INTO library VALUES(33,'SUCHITA',TO_DATE('10-09-2023','DD-MM-YYYY'),'SPOS','PENDING');
+
+ INSERT INTO library VALUES(34,'VASHANAVI',TO_DATE('05-10-2023','DD-MM-YYYY'),'TOC','PENDING');
+
+ INSERT INTO library VALUES(35,'AYUSH',TO_DATE('28-09-2023','DD-MM-YYYY'),'IOT','PENDING');
+
+--SELECT * FROM library;*/
+
+
+CREATE OR REPLACE TRIGGER Trg_lib BEFORE OR AFTER UPDATE OR DELETE ON library FOR EACH ROW 
+ BEGIN
+    INSERT INTO library_audit VALUES(:old.roll_no,:old.name,:old.dateofissue,:old.nameofbook,:old.status);
+    --UPDATE library SET roll_no=26 WHERE name='SAURABH';
+END;
+/
+--UPDATE library SET roll_no=26 WHERE name='SAURABH';
+
+DELETE FROM library WHERE roll_no=33;
+SELECT * FROM library_audit;
+
+SELECT * FROM library;

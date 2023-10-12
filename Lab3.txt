@@ -1,0 +1,320 @@
+ASSIGNMENT 3:
+1)Create a View1 to display List all customers in alphabetical order who have loan from 
+Pune_Station branch.
+
+mysql> CREATE VIEW view1 AS SELECT b.cname from borrower b,loan l WHERE l.bname='STATION' AND l.lno=b.lno OREDER BY b.cname;
+Query OK, 0 rows affected (0.00 sec)
+mysql> select * from view1;
++----------------+
+| cname          |
++----------------+
+| RIDDHI SANGHVI |
++----------------+
+1 row in set (0.00 sec)
+
+2)Create View2 on branch table by selecting any two columns and perform insert
+update delete operations.
+
+mysql> CREATE VIEW view2 as select bname ,assets from branch;
+Query OK, 0 rows affected (0.01 sec)
+mysql> select * from view2;
++-------------+--------+
+| bname       | assets |
++-------------+--------+
+| AKURDI      | 150000 |
+| CAMP        | 100000 |
+| KHADKI      | 155000 |
+| NAVI MUMBAI | 105000 |
+| SANTA CRUZ  | 105000 |
+| STATION     | 155000 |
++-------------+--------+
+6 rows in set (0.00 sec)
+
+mysql> insert into view2 values("WISHRANTWADI",100000);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into view2 values("SWARGETE",1200000);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from view2;
++--------------+---------+
+| bname        | assets  |
++--------------+---------+
+| AKURDI       |  150000 |
+| CAMP         |  100000 |
+| KHADKI       |  155000 |
+| NAVI MUMBAI  |  105000 |
+| SANTA CRUZ   |  105000 |
+| STATION      |  155000 |
+| SWARGETE     | 1200000 |
+| WISHRANTWADI |  100000 |
++--------------+---------+
+8 rows in set (0.00 sec)
+
+mysql> update view2 set assets=120000 where bname="WISHRANTWADI";
+Query OK, 1 row affected (0.01 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> delete from view2 where bname='SWARGETE';
+Query OK, 1 row affected (0.01 sec)
+
+mysql> SELECT * FROM view2;
++--------------+--------+
+| bname        | assets |
++--------------+--------+
+| AKURDI       | 150000 |
+| CAMP         | 100000 |
+| KHADKI       | 155000 |
+| NAVI MUMBAI  | 105000 |
+| SANTA CRUZ   | 105000 |
+| STATION      | 155000 |
+| WISHRANTWADI | 120000 |
++--------------+--------+
+7 rows in set (0.00 sec)
+
+3)Create View3 on borrower and depositor table by selecting any one column from each 
+table perform insert update delete operations.
+
+mysql>create view view3 as select d.cname,b.lno from depositer d,borrower b where d.cname=b.cname;
+Query OK, 1 row affected (0.01 sec)
+mysql> insert into view3(cname,lno) values('ASHISH SHISAL',104);
+ERROR 1393 (HY000): Can not modify more than one base table through a join view 'banking.view3'
+mysql> insert into view3(cname,lno) values('SAURABH BUTALE',305);
+ERROR 1393 (HY000): Can not modify more than one base table through a join view 'banking.view3'
+mysql> update view3 set lno=307 where cname='APOORV SHAH';
+Query OK, 1 row affected (0.01 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> delete from view3 where cname='ADESH PARDESHI';
+ERROR 1395 (HY000): Can not delete from join view 'banking.view3'
+mysql> SELECT * FROM view3;
++-------------------+------+
+| cname             | lno  |
++-------------------+------+
+| ADESH PARDESHI    | 101  |
+| RIDDHI SANGHVI    | 102  |
+| SHARVARI KULKARNI | 103  |
+| ANKITA KAMBLE     | 201  |
+| RIDDHI RUNWAL     | 202  |
+| APOORV SHAH       | 307  |
+| NIDA SHAIKH       | 302  |
+| PRIYANKA LOKHANDE | 303  |
+| YOJNA GADIYA      | 304  |
++-------------------+------+
+9 rows in set (0.00 sec)
+
+4)Create Union of left and right joint for all customers who have an account or loan or 
+both at bank
+
+mysql> select c.cname from customer c left join depositor d on c.cname=d.cname union select b.cname from borrower b right join loan l on b.lno=l.lno;
++-------------------+
+| cname             |
++-------------------+
+| ADESH PARDESHI    |
+| ANKITA KAMBLE     |
+| APOORV SHAH       |
+| DHIREN JAIN       |
+| NIDA SHAIKH       |
+| PRIYANKA LOKHANDE |
+| RIDDHI RUNWAL     |
+| RIDDHI SANGHVI    |
+| SHARVARI KULKARNI |
+| SHIKHA JAISWAL    |
+| SOHAM BHOJ        |
+| YOJNA GADIYA      |
+| NULL              |
++-------------------+
+13 rows in set (0.00 sec)
+
+5)Display content of View1,View2,View3
+mysql> select * from view1;
++----------------+
+| cname          |
++----------------+
+| RIDDHI SANGHVI |
++----------------+
+1 row in set (0.00 sec)
+
+mysql> SELECT * FROM view2;
++--------------+--------+
+| bname        | assets |
++--------------+--------+
+| AKURDI       | 150000 |
+| CAMP         | 100000 |
+| KHADKI       | 155000 |
+| NAVI MUMBAI  | 105000 |
+| SANTA CRUZ   | 105000 |
+| STATION      | 155000 |
+| WISHRANTWADI | 120000 |
++--------------+--------+
+7 rows in set (0.00 sec)
+
+mysql> SELECT * FROM view3;
++-------------------+------+
+| cname             | lno  |
++-------------------+------+
+| ADESH PARDESHI    | 101  |
+| RIDDHI SANGHVI    | 102  |
+| SHARVARI KULKARNI | 103  |
+| ANKITA KAMBLE     | 201  |
+| RIDDHI RUNWAL     | 202  |
+| APOORV SHAH       | 307  |
+| NIDA SHAIKH       | 302  |
+| PRIYANKA LOKHANDE | 303  |
+| YOJNA GADIYA      | 304  |
++-------------------+------+
+9 rows in set (0.00 sec)
+
+6)Create Simple and Unique index.
+
+mysql> create index idxonbranch on branch(bname);
+Query OK, 0 rows affected (0.07 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> create unique index idxoncustomer on customer(cname);
+Query OK, 0 rows affected (0.03 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+7)Display index Information 
+mysql> show indexes from branch;
++--------+------------+-------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table  | Non_unique | Key_name    | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++--------+------------+-------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| branch |          0 | PRIMARY     |            1 | bname       | A         |           7 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
+| branch |          1 | idxonbranch |            1 | bname       | A         |           7 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
++--------+------------+-------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+2 rows in set (0.01 sec)
+
+mysql> show indexes from customer;
++----------+------------+---------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table    | Non_unique | Key_name      | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++----------+------------+---------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| customer |          0 | PRIMARY       |            1 | cname       | A         |          11 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
+| customer |          0 | idxoncustomer |            1 | cname       | A         |          11 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
++----------+------------+---------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+-----+------------+
+2 rows in set (0.01 sec)
+
+8)Truncate table Customer. 
+mysql> truncate table customer;
+ERROR 1701 (42000): Cannot truncate a table referenced in a foreign key constraint (`banking`.`depositor`, CONSTRAINT `depositor_ibfk_1`)
+
+***********************************************************************************************************************************************************************
+mysql> create database compdb;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> use compdb;
+Database changed
+mysql> create table companies(comp_id varchar(20) primary key,name varchar(20),cost integer(20),year integer(20));
+Query OK, 0 rows affected, 2 warnings (0.02 sec)
+
+mysql> insert into companies values('C001','ONGC',2000,2010);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into companies values('C002','HPCL',2500,2012);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into companies values('C005','IOCL',1000,2014);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into companies values('C006','BHEL',3000,2015);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> SELECT * FROM companies;
++---------+------+------+------+
+| comp_id | name | cost | year |
++---------+------+------+------+
+| C001    | ONGC | 2000 | 2010 |
+| C002    | HPCL | 2500 | 2012 |
+| C005    | IOCL | 1000 | 2014 |
+| C006    | BHEL | 3000 | 2015 |
++---------+------+------+------+
+4 rows in set (0.00 sec)
+
+mysql> create table orders(comp_id varchar(20),domain varchar(20),quantity integer,foreign key (comp_id) references companies(comp_id));
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> insert into orders values('C001','oil',109);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into orders values('C002','gas',121);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into orders values('C005','telecom',115);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select * from orders;
++---------+---------+----------+
+| comp_id | domain  | quantity |
++---------+---------+----------+
+| C001    | oil     |      109 |
+| C002    | gas     |      121 |
+| C005    | telecom |      115 |
++---------+---------+----------+
+3 rows in set (0.00 sec)
+
+1)Find names, costs, domains and quantities for companies using inner join.
+
+mysql> select c.name,c.cost,o.domain,o.quantity from companies c inner join orders o on c.comp_id=o.comp_id;
++------+------+---------+----------+
+| name | cost | domain  | quantity |
++------+------+---------+----------+
+| ONGC | 2000 | oil     |      109 |
+| HPCL | 2500 | gas     |      121 |
+| IOCL | 1000 | telecom |      115 |
++------+------+---------+----------+
+3 rows in set (0.02 sec)
+
+2)Find names, costs, domains and quantities for companies using left outer join.
+
+mysql> select c.name,c.cost,o.domain,o.quantity from companies c left outer join orders o on c.comp_id=o.comp_id;
++------+------+---------+----------+
+| name | cost | domain  | quantity |
++------+------+---------+----------+
+| ONGC | 2000 | oil     |      109 |
+| HPCL | 2500 | gas     |      121 |
+| IOCL | 1000 | telecom |      115 |
+| BHEL | 3000 | NULL    |     NULL |
++------+------+---------+----------+
+4 rows in set (0.00 sec)
+
+3)Find names, costs, domains and quantities for companies using right outer join.
+
+mysql> select c.name,c.cost,o.domain,o.quantity from companies c right outer join orders o on c.comp_id=o.comp_id;
++------+------+---------+----------+
+| name | cost | domain  | quantity |
++------+------+---------+----------+
+| ONGC | 2000 | oil     |      109 |
+| HPCL | 2500 | gas     |      121 |
+| IOCL | 1000 | telecom |      115 |
++------+------+---------+----------+
+3 rows in set (0.00 sec)
+
+4)Find names, costs, domains and quantities for companies using Union operator.
+
+mysql> select c.name,c.cost,o.domain,o.quantity from companies c right join orders o on c.comp_id=o.comp_id union select c.name,c.cost,o.domain,o.quantity from companies c left join orders o on c.comp_id=o.comp_id;
++------+------+---------+----------+
+| name | cost | domain  | quantity |
++------+------+---------+----------+
+| ONGC | 2000 | oil     |      109 |
+| HPCL | 2500 | gas     |      121 |
+| IOCL | 1000 | telecom |      115 |
+| BHEL | 3000 | NULL    |     NULL |
++------+------+---------+----------+
+4 rows in set (0.00 sec)
+
+5)Create View View1 by selecting both tables to show company name and quantities.
+
+mysql> create view view1 as select c.name,o.quantity from companies c,orders o where c.comp_id=o.comp_id;
+Query OK, 0 rows affected (0.02 sec)
+
+6)Display content of View1
+
+mysql> select * from view1;
++------+----------+
+| name | quantity |
++------+----------+
+| ONGC |      109 |
+| HPCL |      121 |
+| IOCL |      115 |
++------+----------+
+3 rows in set (0.00 sec)
