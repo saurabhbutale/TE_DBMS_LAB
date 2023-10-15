@@ -1,0 +1,38 @@
+/*create table Stud_Marks(name varchar(20), total_marks number(10));
+create table Result(Roll number(5),Name varchar(20), Class varchar(20)); 
+
+insert into Stud_Marks values('RAM',1500); 
+insert into Stud_Marks values('SHAM',1100); 
+insert into Stud_Marks values('RAO',800);*/
+
+-- SELECT * FROM Stud_Marks;
+
+CREATE OR REPLACE PROCEDURE proc_grade(vname varchar,vroll number)
+IS
+grade varchar(20);
+vmarks number(10);
+
+BEGIN
+select total_marks into vmarks from Stud_Marks where name=vname;
+if vmarks<=1500 and vmarks>=990 then
+grade:='distinction';
+elsif vmarks<=989 and vmarks>=900 then grade:='first class';
+elsif vmarks<=899 and vmarks>=825 then
+grade:='Higher Second Class';
+end if;
+insert into Result values(vroll,vname,grade);
+
+END proc_grade;
+
+DECLARE
+vname varchar(20);
+vroll number(10);
+
+BEGIN
+vname:='RAM';
+vroll:=77;
+proc_grade(vname,vroll); 
+
+END;
+
+--SELECT * FROM Result;
