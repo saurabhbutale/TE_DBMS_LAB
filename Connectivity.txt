@@ -1,0 +1,64 @@
+25)Write a program to implement MongoDB database connectivity with PHP/python/Java 
+Implement Database navigation CRUD operations (add, delete, edit etc.)
+
+from pymongo import MongoClient
+client=MongoClient("mongodb://localhost:27017")   
+database=client.Productsdb
+collection=database.Products
+while True:
+    print("1.Insert")
+    print("2.update")
+    print("3.delete")
+    print("4.display")
+    ch=int(input("Enter your choice:"))
+    if ch==1:
+        collection.insert_one({"Name":"sugar","Price":10,"Units":110})
+        print("Inserted")
+        #client.close()
+    elif ch==2:
+        collection.update_one({"Name":"sugar"},{"$set":{"Price":200}})
+        print("Updated")
+        #client.close()
+    elif ch==3:
+        collection.delete_one({"Name":"sugar"})
+        print("Deleted")
+        #client.close()
+    elif ch==4:
+        for p in collection.find():
+            print("Name=",p["Name"],"Price=",p["Price"],"Units=",p["Units"])
+            #client.close()    
+client.close()        
+
+26)Implement MYSQL/Oracle database connectivity with PHP/ python/Java 
+Implement Database navigation operations (add, delete, edit,)
+
+import mysql.connector
+mydb=mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="Pass@123",
+    database="db10"
+)
+mycursor = mydb.cursor()
+while True:
+    print("1.Insert")
+    print("2.Update")
+    print("3.delete")
+    ch=int(input("Enter your choice:"))
+    if ch==1:
+        sql="INSERT INTO stu1(roll_no,name,mark) VALUES(12,'RAM',85)"
+        mycursor.execute(sql)
+        l= "INSERT INTO stu1(roll_no,name,mark) VALUES(13,'SAM',75)"
+        mycursor.execute(l)
+        mydb.commit()
+        print(mycursor.rowcount,"record inserted.")
+    if ch==2:    
+        l= "update stu1 set name='KAM' WHERE roll_no=13"
+        mycursor.execute(l)
+        mydb.commit()
+        print(mycursor.rowcount,"record updated.")
+    if ch==3:    
+       l= "delete from stu1 WHERE roll_no=12"
+       mycursor.execute(l)
+       mydb.commit()
+       print(mycursor.rowcount,"record deleted.")    

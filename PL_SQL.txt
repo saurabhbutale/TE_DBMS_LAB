@@ -1,0 +1,465 @@
+PLSQL start command:
+sudo su
+Pass@123
+sqlplus sys as sysdba
+root
+1**************************************************************************************************
+1)Write a PL/SQL code block to calculate the area of a circle for a value of radius varying from 5 to 9. Store the radius and the 
+corresponding values of calculated area in an empty table named areas, consisting of two columns, radius and area.
+---------------------------------------------------------------------------------------------------
+SET SERVEROUTPUT ON
+CREATE TABLE assignment_3b(radius NUMBER,area NUMBER)
+
+DECLARE
+	radius_var NUMBER;
+	area_var NUMBER;
+	pi NUMBER := 3.14;
+BEGIN
+	FOR radius_var IN 5 .. 9 LOOP
+		area_var := pi*radius_var*radius_var;
+		dbms_output.put_line(area_var);
+		INSERT INTO assignment_3b VALUES (radius_var,area_var);
+	END LOOP;
+
+END;
+/
+
+2***************************************************************************************************
+2)Write a Unnamed PL/SQL of code for the following requirements:-
+Schema:
+ Borrower (Rollin, Name, DateofIssue, NameofBook, Status)
+ Fine (Roll_no,Date,Amt)
+Accept roll_no & name of book from user.
+Check the number of days (from date of issue).
+1. If days are between 15 to 30 then fine amounts will be Rs 5 
+per day.
+2. If no. of days>30, per day fine will be Rs 50 per day & for 
+days less than 30, Rs. 5 per day.
+3. After submitting the book, status will change from I to R.
+4. If condition of fine is true, then details will be stored into 
+fine table.
+---------------------------------------------------------------------------------------------------
+SET SERVEROUT ON
+SET VERIFY OFF
+
+/*CREATE TABLE  borrower(roll_no NUMBER , name VARCHAR2(25), dateofissue DATE,name_of_book VARCHAR2(25), status VARCHAR2(20));
+
+CREATE TABLE fine(roll_no NUMBER,date_of_return DATE,amt NUMBER);
+
+INSERT INTO borrower VALUES(31,'ASHISH',TO_DATE('01-08-2023','DD-MM-YYYY'),'DBMS','I');
+
+INSERT INTO borrower VALUES(32,'SAURABH',TO_DATE('15-08-2023','DD-MM-YYYY'),'TOC','I');
+
+INSERT INTO borrower VALUES(32,'SAURABH',TO_DATE('15-08-2023','DD-MM-YYYY'),'TOC','I');
+
+INSERT INTO borrower VALUES(34,'VASHAVAVI',TO_DATE('26-08-2023','DD-MM-YYYY'),'CNS','I');
+
+INSERT INTO borrower VALUES(35,'AYUSH',TO_DATE('09-09-2023','DD-MM-YYYY'),'IOT','I');
+*/
+DECLARE 
+	i_roll_no NUMBER;
+	name_of_book VARCHAR2(25);
+	no_of_days NUMBER;
+	return_date DATE := TO_DATE(SYSDATE,'DD-MM-YYYY');
+	temp NUMBER;
+	doi DATE;
+	fine NUMBER;
+BEGIN
+	i_roll_no := &i_roll_no;
+	name_of_book := '&nameofbook';
+	dbms_output.put_line(return_date);
+	SELECT to_date(borrower.dateofissue,'DD-MM-YYYY') INTO doi FROM borrower WHERE borrower.roll_no = i_roll_no AND borrower.name_of_book = name_of_book;
+	no_of_days := return_date-doi;
+	dbms_output.put_line(no_of_days);
+	IF (no_of_days >15 AND no_of_days <=30) THEN
+		fine := 5*no_of_days;
+		
+	ELSIF (no_of_days>30 ) THEN
+		temp := no_of_days-30;
+		fine := 150 + temp*50;
+	END IF;
+	dbms_output.put_line(fine);
+	INSERT INTO fine VALUES(i_roll_no,return_date,fine);
+	UPDATE borrower SET status = 'R' WHERE borrower.roll_no = i_roll_no;
+	
+	
+END;
+/
+3**************************************************************************************************
+Write a PL/SQL block of code using Cursor that will merge the data available in the newly created table N_Roll 
+Call with the data available in the table O_RollCall. If the data in the first table already exist in the 
+second table then that data should be skipped.
+------------------------------------------------------------------------------------------------------
+SET SERVEROUT ON
+SET VERIFY OFF
+/*
+CREATE TABLE o_rollcall(roll_no NUMBER,  name VARCHAR2(25), div VARCHAR2(5));
+CREATE TABLE n_rollcall(roll_no NUMBER,  name VARCHAR2(25), div VARCHAR2(5));
+INSERT INTO o_rollcall VALUES(45,'ASHUTOSH','A');
+INSERT INTO o_rollcall VALUES(46,'ARYAN','A'); 
+INSERT INTO o_rollcall VALUES(47,'SANKET','B');
+INSERT INTO o_rollcall VALUES(45,'ASHUTOSH','A');
+INSERT INTO o_rollcall VALUES(48,'ROHAN','B');
+INSERT INTO o_rollcall VALUES(45,'ASHUTOSH','B');
+*/
+CREATE OR REPLACE PROCEDURE cursor_imp AS
+c_r NUMBER;
+c_n VARCHAR2(25);
+c_d VARCHAR2(5);
+cursor c1 (roll NUMBER , n VARCHAR2 , d VARCHAR2) IS SELECT roll_no , COUNT (roll_no),name ,COUNT (name), div, COUNT (div) FROM o_rollcall GROUP BY roll_no,name,div HAVING (COUNT(roll_no)>1) AND (COUNT(name)>1) AND (COUNT(div)>1) ;
+temp  c1%rowtype;
+BEGIN
+	DELETE FROM n_rollcall;
+	INSERT INTO n_rollcall SELECT * FROM o_rollcall;
+	OPEN c1(c_r,c_n,c_d);
+	LOOP
+		FETCH c1 INTO temp;
+		EXIT WHEN c1%NOTFOUND;
+		DELETE FROM n_rollcall WHERE roll_no = temp.roll_no AND name = temp.name AND div = temp.div;
+		INSERT INTO n_rollcall VALUES (temp.roll_no,temp.name,temp.div);
+		dbms_output.put_line(temp.roll_no||temp.name||temp.div);
+	END LOOP;
+END;
+/
+
+BEGIN
+	cursor_imp;
+END;
+
+/
+
+4**************************************************************************************************
+Write a PL/SQL block for following requirements and handle the exceptions. Roll no. of students will be entered by the user. 
+Attendance of roll no. entered by user will be checked in the Stud table. If attendance is less than 75% then display the 
+message “Term not granted” and set the status in stud table as “Detained”. Otherwise display message “Term granted” and set the 
+status in stud table as “Not Detained”
+Student (Roll, Name, Attendance ,Status)
+---------------------------------------------------------------------------------------------------
+/*create table student( roll number,name varchar(20),attendance number,status varchar(20));
+ insert into student values (32,'sau',89,'Not Detained');
+ insert into student values (36,'sl',59,'Detained');*/
+
+DECLARE
+    v_roll_number number;
+    v_attendance number;
+    v_status varchar(20);
+BEGIN
+    -- Accepting roll number from the user
+    DBMS_OUTPUT.PUT('Enter Roll Number: ');
+    v_roll_number:=&v_roll_number;
+
+    -- Fetching attendance and status for the given roll number
+    SELECT attendance,status
+    INTO v_attendance, v_status
+    FROM student
+    WHERE roll = v_roll_number;
+
+    -- Checking attendance and updating status
+    IF v_attendance < 75 THEN
+        DBMS_OUTPUT.PUT_LINE('Term not granted');
+        v_status := 'Detained';
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('Term granted');
+        v_status := 'Not Detained';
+    END IF;
+
+    -- Updating status in the Stud table
+    UPDATE student
+    SET status = v_status
+    WHERE roll = v_roll_number;
+
+    DBMS_OUTPUT.PUT_LINE('Status updated successfully.');
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('Roll number not found.');
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
+END;
+/
+
+5**************************************************************************************************
+Write a PL/SQL Block to increase the salary of employees by 10% of existing salary, who are having salary less than average 
+salary of organization, whenever such salary updates takes place,a record for same is maintained in the increment_salary table.
+emp(emp_no, salary)
+increment_salary(emp_no, salary)
+---------------------------------------------------------------------------------------------------
+DECLARE
+    v_avg_salary NUMBER;
+BEGIN
+    -- Calculate average salary of the organization
+    SELECT AVG(salary) INTO v_avg_salary FROM emp;
+
+    -- Update salary and maintain records in increment_salary table
+    FOR emp_record IN (SELECT emp_no, salary FROM emp WHERE salary < v_avg_salary) LOOP
+        -- Calculate the new salary (increased by 10%)
+        DECLARE
+            v_new_salary NUMBER;
+        BEGIN
+            v_new_salary := emp_record.salary * 1.1;
+
+            -- Update the salary in the emp table
+            UPDATE emp
+            SET salary = v_new_salary
+            WHERE emp_no = emp_record.emp_no;
+
+            -- Maintain a record in the increment_salary table
+            INSERT INTO increment_salary (emp_no, salary)
+            VALUES (emp_record.emp_no, v_new_salary);
+
+            DBMS_OUTPUT.PUT_LINE('Salary updated for Employee ' || emp_record.emp_no ||
+                '. New Salary: ' || v_new_salary);
+        EXCEPTION
+            WHEN OTHERS THEN
+                DBMS_OUTPUT.PUT_LINE('Error updating salary for Employee ' || emp_record.emp_no ||
+                    ': ' || SQLERRM);
+        END;
+    END LOOP;
+END;
+/
+
+6**************************************************************************************************
+Write a Stored Procedure namely proc_Grade for the categorization of student. If marks scored by students 
+in examination is <=1500 and marks>=990 then student will be placed in distinction category if marks scored 
+are between 989 and 900 category is first class, if marks 899 and 825 category is Higher Second Class.
+Write a PL/SQL block for using procedure created with above requirement.
+Stud_Marks(name, total_marks), 
+Result(Roll,Name, Class)
+-----------------------------------------------------------------------------------------------------
+SET SERVEROUT ON
+SET VERIFY OFF
+--CREATE TABLE stud_marks(name VARCHAR2(25),total_marks NUMBER);
+--CREATE TABLE result(roll_number NUMBER , name VARCHAR2(25), class VARCHAR2(30));
+-- CREATE TABLE ONLY ONCE
+
+CREATE OR REPLACE FUNCTION func_1(r IN NUMBER, n IN VARCHAR2,m IN NUMBER) RETURN VARCHAR2 AS
+BEGIN
+		procedure_1(r,n,m);
+		return 'SUCCESSFULL';
+END;
+/
+CREATE OR REPLACE PROCEDURE procedure_1 ( roll_no IN NUMBER, name IN VARCHAR2 ,marks IN NUMBER) AS
+	BEGIN
+		IF (marks<=1500 and marks>=990) THEN
+			DBMS_OUTPUT.PUT_LINE ('DISTINCTION');
+			INSERT INTO result VALUES (roll_no,name,'DISTINCTION');
+		ELSIF (marks<=989 and marks>=900) THEN
+			DBMS_OUTPUT.PUT_LINE ('FIRST CLASS');
+			INSERT INTO result VALUES (roll_no,name,'FIRST CLASS');
+		ELSIF (marks<=899 and marKs>825) THEN
+			DBMS_OUTPUT.PUT_LINE('HIGHER SECOND CLASS');
+			INSERT INTO result VALUES (roll_no,name,'HIGHER SECOND CLASS');
+		ELSE
+			DBMS_OUTPUT.PUT_LINE ('FAIL');
+			INSERT INTO result VALUES (roll_no,name,'FAIL');
+
+	    END IF;
+	    INSERT INTO stud_marks VALUES (name,marks);
+    END procedure_1;
+    /
+	   
+DECLARE
+	name_1 VARCHAR2(25);
+	roll_no_1 NUMBER;
+	marks_1 NUMBER;
+	class VARCHAR2(25);
+
+BEGIN
+	roll_no_1:=&roll_no_1;
+	name_1:='&name_1';
+	marks_1:=&marks_1;
+	class := func_1(roll_no_1,name_1,marks_1);
+	dbms_output.put_line(class);
+END;
+/
+6**************************************************************************************************
+Create a stored function titled 'Age_calc'.Accept the date of birth of a person as a parameter.
+Calculate the age of the person in years, months and days e.g. 3 years, 2months, 10 days.
+Return the age in years directly (with the help of Return statement).
+The months and days are to be returned indirectly in the form of OUT parameters
+---------------------------------------------------------------------------------------------------
+SET SERVEROUT ON
+SET VERIFY OFF
+CREATE OR REPLACE FUNCTION Age_calc(dat IN DATE, d IN OUT NUMBER, m IN OUT NUMBER) 
+RETURN NUMBER AS
+    y NUMBER;
+BEGIN
+    d := TRUNC(sysdate - dat);
+    y := d / 365;
+    y := TRUNC(y);
+    m := (d - y * 365) / 30;
+    m := TRUNC(m);
+    d := TRUNC(d - y * 365 - m * 30);
+    RETURN y;
+END;
+/
+
+DECLARE
+    D VARCHAR2(20) := 'r';
+    P1 NUMBER := &day_of_birth;
+    P2 NUMBER := &month_of_birth;
+    P3 NUMBER := &year_of_birth;
+BEGIN
+    D := TO_CHAR(P1) || '-' || TO_CHAR(P2) || '-' || TO_CHAR(P3);
+    P1 := Age_calc(TO_DATE(D, 'DD-MM-YYYY'), P2, P3);
+    DBMS_OUTPUT.PUT_LINE('DAYS: ' || P2 || ' MONTHS: ' || P3 || ' YEARS: ' || P1);
+END;
+/
+
+
+
+7**************************************************************************************************
+Write a Row Level Before and After Trigger on Library table. The System should keep track of the 
+records that are being updated or deleted. The old value of updated or deleted records should be 
+added in Library_Audit table.
+--------------------------------------------------------------------------------------------------
+/* Creating Library table
+CREATE TABLE Library (
+    Book_ID NUMBER PRIMARY KEY,
+    Title VARCHAR2(100),
+    Author VARCHAR2(50),
+    Genre VARCHAR2(50),
+    Release_Date DATE
+);
+
+-- Creating Library_Audit table
+CREATE TABLE Library_Audit (
+    Audit_ID NUMBER PRIMARY KEY,
+    Book_ID NUMBER,
+    Old_Title VARCHAR2(100),
+    Old_Author VARCHAR2(50),
+    Old_Genre VARCHAR2(50),
+    Old_Release_Date DATE,
+    Audit_Type VARCHAR2(10), -- 'UPDATE' or 'DELETE'
+    Audit_Date TIMESTAMP
+);
+
+-- Inserting dummy values into Library table
+INSERT INTO Library (Book_ID, Title, Author, Genre, Release_Date)
+VALUES (1, 'The Catcher in the Rye', 'J.D. Salinger', 'Fiction', TO_DATE('1951-07-16', 'YYYY-MM-DD'));
+
+INSERT INTO Library (Book_ID, Title, Author, Genre, Release_Date)
+VALUES (2, 'To Kill a Mockingbird', 'Harper Lee', 'Fiction', TO_DATE('1960-07-11', 'YYYY-MM-DD'));
+
+INSERT INTO Library (Book_ID, Title, Author, Genre, Release_Date)
+VALUES (3, '1984', 'George Orwell', 'Dystopian', TO_DATE('1949-06-08', 'YYYY-MM-DD'));
+
+INSERT INTO Library (Book_ID, Title, Author, Genre, Release_Date)
+VALUES (4, 'The Great Gatsby', 'F. Scott Fitzgerald', 'Fiction', TO_DATE('1925-04-10', 'YYYY-MM-DD'));
+*/
+
+-- Creating BEFORE UPDATE trigger
+CREATE OR REPLACE TRIGGER Library_Before_Update
+BEFORE UPDATE ON Library
+FOR EACH ROW
+BEGIN
+    IF :OLD.Title IS NOT NULL THEN
+        -- Record the old values before update
+        INSERT INTO Library_Audit (Audit_ID, Book_ID, Old_Title, Old_Author, Old_Genre, Old_Release_Date, Audit_Type, Audit_Date)
+        VALUES (Library_Audit_Seq.NEXTVAL, :OLD.Book_ID, :OLD.Title, :OLD.Author, :OLD.Genre, :OLD.Release_Date, 'UPDATE', SYSTIMESTAMP);
+    END IF;
+END;
+/
+
+/*-- Creating BEFORE DELETE trigger
+CREATE OR REPLACE TRIGGER Library_Before_Delete
+BEFORE DELETE ON Library
+FOR EACH ROW
+BEGIN
+    -- Record the old values before delete
+    INSERT INTO Library_Audit (Audit_ID, Book_ID, Old_Title, Old_Author, Old_Genre, Old_Release_Date, Audit_Type, Audit_Date)
+    VALUES (Library_Audit_Seq.NEXTVAL, :OLD.Book_ID, :OLD.Title, :OLD.Author, :OLD.Genre, :OLD.Release_Date, 'DELETE', SYSTIMESTAMP);
+END;*/
+**************************************************************************************************
+Trigger: Create a row level trigger for the CUSTOMERS table that would fire INSERT or UPDATE or 
+DELETE operations performed on the CUSTOMERS table. This trigger will display the salary difference 
+between the old values and new values.
+---------------------------------------------------------------------------------------------------
+SET SERVEROUT ON
+SET VERIFY OFF
+CREATE TABLE CUSTOMERS (
+    Customer_ID NUMBER PRIMARY KEY,
+    Customer_Name VARCHAR2(50),
+    Salary NUMBER
+);
+
+-- Creating the row-level trigger
+CREATE OR REPLACE TRIGGER Customers_Audit_Salary
+BEFORE INSERT OR UPDATE OR DELETE
+ON CUSTOMERS
+FOR EACH ROW
+DECLARE
+    v_old_salary NUMBER;
+BEGIN
+    IF UPDATING OR DELETING THEN
+        v_old_salary := :OLD.Salary;
+        DBMS_OUTPUT.PUT_LINE('Old Salary: ' || v_old_salary);
+    END IF;
+
+    IF UPDATING OR INSERTING THEN
+        DBMS_OUTPUT.PUT_LINE('New Salary: ' || :NEW.Salary);
+    END IF;
+END Customers_Audit_Salary;
+/
+**************************************************************************************************
+Trigger :Write a after trigger for Insert, update and delete 
+event considering following requirement:
+Emp(Emp_no, Emp_name, Emp_salary)
+a) Trigger should be initiated when salary tried to be inserted 
+is less than Rs.50,000/-
+b) Trigger should be initiated when salary tried to be updated 
+for value less than Rs. 50,000/-
+Also the new values expected to be inserted will be stored in new 
+table Tracking(Emp_no,Emp_salary).
+---------------------------------------------------------------------------------------------------
+SET SERVEROUT ON
+SET VERIFY OFF
+-- Creating the Emp table (assuming it doesn't exist already)
+CREATE TABLE Emp (
+    Emp_no NUMBER PRIMARY KEY,
+    Emp_name VARCHAR2(50),
+    Emp_salary NUMBER
+);
+
+-- Creating the Tracking table
+CREATE TABLE Tracking (
+    Emp_no NUMBER,
+    Emp_salary NUMBER,
+    Operation VARCHAR2(10), -- 'INSERT', 'UPDATE', or 'DELETE'
+    Tracking_Date TIMESTAMP
+);
+
+-- Creating the after trigger
+CREATE OR REPLACE TRIGGER Emp_Trigger
+AFTER INSERT OR UPDATE OR DELETE
+ON Emp
+FOR EACH ROW
+DECLARE
+    v_operation VARCHAR2(10);
+BEGIN
+    -- Check if the salary is less than Rs. 50,000
+    IF :NEW.Emp_salary < 50000 THEN
+        -- Determine the operation type
+        IF INSERTING THEN
+            v_operation := 'INSERT';
+        ELSIF UPDATING THEN
+            v_operation := 'UPDATE';
+        ELSIF DELETING THEN
+            v_operation := 'DELETE';
+        END IF;
+
+        -- Store the new values in the Tracking table
+        INSERT INTO Tracking (Emp_no, Emp_salary, Operation, Tracking_Date)
+        VALUES (:NEW.Emp_no, :NEW.Emp_salary, v_operation, SYSTIMESTAMP);
+
+        DBMS_OUTPUT.PUT_LINE('Trigger fired for ' || v_operation || ' operation. Salary less than Rs. 50,000.');
+    END IF;
+END Emp_Trigger;
+/
+
+
+
+
+
+
+	
+

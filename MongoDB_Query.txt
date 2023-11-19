@@ -1,0 +1,262 @@
+mongodb start command:
+mongo[or mongosh]
+1**************************************************************************************************
+test> show databases;
+Productsdb   72.00 KiB
+admin        40.00 KiB
+config      108.00 KiB
+local        72.00 KiB
+test> use Empdb;
+switched to db Empdb
+Empdb> db.createCollection("Employee");
+Empdb> db.Employee.insertOne({Empid:101,Name:{Fname:"saurabh",Lname:"Butale"},Comp_name:"Infosys",Salary:120000,Designation:"Software Developer",Age:22,Expertise:["System Programming","MySQL","MongoDB"],DOB:"22-10-2003",Email_id:"sau123@gmail.com",Contact_No:"7888043238",Address:{Padd:{City:"Amravati",Pin_Code:"444707"},Ladd:{City:"Pune",Pin_code:"401107"}}});
+{
+  acknowledged: true,
+  insertedId: ObjectId("655898393c7335d073e4b97a")
+}
+
+1)Select all documents where the Designation field has the value "Programmer" and the value of the salary field is greater than 30000.
+db.Employee.find({
+  Designation: "Programmer",
+  Salary: { $gt: 30000 }
+})
+
+2)Create a new document if no document in the employee collection contains {Designation: "Tester", Company_name: "TCS", Age: 25}.
+db.Employee.update(
+  { Designation: "Tester", Company_name: "TCS", Age: 25 },
+  { $setOnInsert: { Designation: "Tester", Company_name: "TCS", Age: 25 } },
+  { upsert: true }
+)
+
+3)Increase the salary of each employee working with "Infosys" by 10000.
+db.Employee.update(
+  { Company_name: "Infosys" },
+  { $inc: { Salary: 10000 } },
+  { multi: true }
+)
+
+4)Find all employees working with "TCS" and reduce their salary by 5000.
+db.Employee.update(
+  { Company_name: "TCS" },
+  { $inc: { Salary: -5000 } },
+  { multi: true }
+)
+
+5)Return documents where Designation is not equal to "Tester".
+db.Employee.find({ Designation: { $ne: "Tester" } })
+
+6)Find all employees with an exact match on an array having Expertise: ['Mongodb','Mysql','Cassandra'].
+db.Employee.find({
+  Expertise: { $all: ['Mongodb', 'Mysql', 'Cassandra'] }
+})
+
+2**************************************************************************************************
+1) Final name of Employee where age is less than 30 and salary more than 50000.
+db.Employee.find({ "Age": { $lt: 30 }, "Salary": { $gt: 50000 } }, { "Name": 1, _id: 0 })
+
+2) Creates a new document if no document in the employee collection contains {Designation: "Tester", Company_name: "TCS", Age: 25}:
+
+db.Employee.updateOne(
+  { "Designation": "Tester", "CompanyName": "TCS", "Age": 25 },
+  {
+    $setOnInsert: {
+      "Name": { "FName": "New", "LName": "Employee" },
+      "Salary": 60000,
+      "Expertise": ["Manual Testing"],
+      "DOB": "1998-01-01",
+      "EmailId": "new.employee@example.com",
+      "Contact": "555-555-5555",
+      "Address": [{ "PAddr": "New City", "LAddr": "New Street" }]
+    }
+  },
+  { upsert: true }
+)
+3) Selects all documents in the collection where the field age has a value less than 30 or the value of the salary field is greater than 40000:
+
+db.Employee.find({ $or: [{ "Age": { $lt: 30 } }, { "Salary": { $gt: 40000 } }] })
+
+4) Find documents where Designation is not equal to "Developer":
+
+db.Employee.find({ "Designation": { $ne: "Developer" } }, { "_id": 1, "Designation": 1, "Address": 1, "Name": 1 })
+
+5) Find _id, Designation, Address, and Name from all documents where Company_name is "Infosys":
+
+db.Employee.find({ "CompanyName": "Infosys" }, { "_id": 1, "Designation": 1, "Address": 1, "Name": 1 })
+6) Display only FName and LName of all Employees:
+
+db.Employee.find({}, { "Name.FName": 1, "Name.LName": 1, "_id": 0 })
+
+3**************************************************************************************************
+1)Creates a new document if no document in the employee collection contains {Designation: "Tester", Company_name: "TCS", Age: 25}:
+
+db.Employee.update(
+  { "Designation": "Tester", "Company_name": "TCS", "Age": 25 },
+  { $setOnInsert: { "Emp_id": 0, "Name": { "FName": "", "LName": "" }, "Salary": 0, "Expertise": [], "DOB": "", "Email_id": "", "Contact": "", "Address": [] } },
+  { upsert: true }
+)
+
+2)Finds all employees working with Company_name: "TCS" and increase their salary by 2000:
+
+db.Employee.updateMany({ "Company_name": "TCS" }, { $inc: { "Salary": 2000 } })
+
+3)Matches all documents where the value of the field Address is an embedded document that contains only the field city with the value "Pune" and the field Pin_code with the value "411001":
+
+db.Employee.find({ "Address": { $elemMatch: { "PAddr.City": "Pune", "PAddr.Pin_Code": "411001" } } })
+
+4)Find employee details who are working as "Developer" or "Tester":
+
+db.Employee.find({ "Designation": { $in: ["Developer", "Tester"] } })
+
+5)Drop Single documents where designation="Developer":
+
+db.Employee.deleteOne({ "Designation": "Developer" })
+
+6)Count number of documents in employee collection:
+
+db.Employee.countDocuments()
+
+4**************************************************************************************************
+1)Using aggregation, return separate values in the Expertise array and return the sum of each element of the array:
+
+db.Employee.aggregate([
+  { $unwind: "$Expertise" },
+  {
+    $group: {
+      _id: "$Expertise",
+      total: { $sum: 1 }
+    }
+  }
+])
+
+2)Using aggregate method, return Max and Min Salary for each company:
+
+db.Employee.aggregate([
+  {
+    $group: {
+      _id: "$Company_name",
+      maxSalary: { $max: "$Salary" },
+      minSalary: { $min: "$Salary" }
+    }
+  }
+])
+
+3)Using aggregate method, find Employee with Total Salary for Each City with Designation="DBA":
+
+db.Employee.aggregate([
+  { $match: { "Designation": "DBA" } },
+  {
+    $group: {
+      _id: { City: "$Address.PAddr.City" },
+      totalSalary: { $sum: "$Salary" },
+      employees: { $push: "$Name" }
+    }
+  }
+])
+
+4)Using aggregation method, return separate values in the Expertise array for employee name where Name.FName = "Swapnil" and Name.LName = "Jadhav":
+
+db.Employee.aggregate([
+  { $match: { "Name.FName": "Swapnil", "Name.LName": "Jadhav" } },
+  { $unwind: "$Expertise" },
+  {
+    $group: {
+      _id: "$_id",
+      Expertise: { $push: "$Expertise" }
+    }
+  }
+])
+
+5)To create compound indexes on Name: 1, Age: -1:
+
+db.Employee.createIndex({ "Name.FName": 1, "Name.LName": 1, "Age": -1 })
+
+6)Create an index on Emp_id field, compare the time required to search Emp_id before and after creating an index (Hint: Add at least 10000 Documents):
+
+// Before creating an index
+db.Employee.find({ "Emp_id": 12345 })
+
+// Create an index
+db.Employee.createIndex({ "Emp_id": 1 })
+
+// After creating an index
+db.Employee.find({ "Emp_id": 12345 })
+
+7)Return a list of indexes created on the employee collection:
+
+db.Employee.getIndexes()
+
+5**************************************************************************************************
+1)Total Salary per Company:
+
+db.Employee.mapReduce(
+  function () {
+    emit(this.Company_name, this.Salary);
+  },
+  function (key, values) {
+    return Array.sum(values);
+  },
+  { out: "totalSalaryPerCompany" }
+);
+
+2)Total Salary for the Company "TCS":
+
+db.Employee.mapReduce(
+  function () {
+    emit(this.Company_name, this.Salary);
+  },
+  function (key, values) {
+    return Array.sum(values);
+  },
+  { out: "totalSalaryTCS", query: { "Company_name": "TCS" } }
+);
+
+3)Average Salary for Companies in Pune:
+
+db.Employee.mapReduce(
+  function () {
+    emit(this.Company_name, { count: 1, totalSalary: this.Salary });
+  },
+  function (key, values) {
+    var result = { count: 0, totalSalary: 0 };
+    values.forEach(function (value) {
+      result.count += value.count;
+      result.totalSalary += value.totalSalary;
+    });
+    return result;
+  },
+  {
+    out: "averageSalaryPune",
+    finalize: function (key, reducedValue) {
+      reducedValue.averageSalary = reducedValue.totalSalary / reducedValue.count;
+      return reducedValue;
+    },
+    query: { "Address.PAddr.City": "Pune" }
+  }
+);
+
+4)Total Count for City "Pune":
+
+db.Employee.mapReduce(
+  function () {
+    emit(this.Address.PAddr.City, 1);
+  },
+  function (key, values) {
+    return Array.sum(values);
+  },
+  { out: "totalCountPune", query: { "Address.PAddr.City": "Pune" } }
+);
+
+5)Count for City "Pune" and Age greater than 40:
+
+db.Employee.mapReduce(
+  function () {
+    if (this.Address.PAddr.City === "Pune" && this.Age > 40) {
+      emit("Pune", 1);
+    }
+  },
+  function (key, values) {
+    return Array.sum(values);
+  },
+  { out: "countPuneAgeGT40" }
+);
+***************************************************************************************************
